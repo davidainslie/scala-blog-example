@@ -67,7 +67,7 @@ object CreditSuisse extends Bank {
   val name = "Credit Suisse"
 
   def quote(symbol: String)(implicit ws: WSClient) = 
-    ws.url(s"http://finance.yahoo.com/d/quotes.csv?s=$symbol&f=snl1").get().map { response =>
+    ws url s"http://finance.yahoo.com/d/quotes.csv?s=$symbol&f=snl1" get() map { response =>
       /* Body of response is of form: "AAPL","Apple Inc.",94.40 */
       Quote(this, GBP(response.body.split(",")(2).toDouble))
     }
@@ -83,7 +83,7 @@ object JPMorgan extends Bank {
   val name = "JP Morgan"
 
   def quote(symbol: String)(implicit ws: WSClient) = 
-    ws.url(s"http://finance.google.com/finance/info?client=ig&q=NASDAQ:$symbol").get().map { response =>
+    ws url s"http://finance.google.com/finance/info?client=ig&q=NASDAQ:$symbol" get() map { response =>
       /* Body of respone is of the form: // [{"id": "22144", "t" : "AAPL" ,"e" : "NASDAQ" ,"l" : "94.40" ...}]*/
       Quote(this, GBP((parse(response.body.replaceAll("""[// \[|\]]""", "")) \ "l").extract[String].toDouble))
     }

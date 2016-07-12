@@ -11,8 +11,9 @@ object JPMorgan extends Bank {
 
   val name = "JP Morgan"
 
-  def quote(symbol: String)(implicit ws: WSClient) = ws.url(s"http://finance.google.com/finance/info?client=ig&q=NASDAQ:$symbol").get().map { response =>
-    /* Body of respone is of the form: // [{"id": "22144", "t" : "AAPL" ,"e" : "NASDAQ" ,"l" : "94.40" ...}]*/
-    Quote(this, GBP((parse(response.body.replaceAll("""[// \[|\]]""", "")) \ "l").extract[String].toDouble))
-  }
+  def quote(symbol: String)(implicit ws: WSClient) =
+    ws url s"http://finance.google.com/finance/info?client=ig&q=NASDAQ:$symbol" get() map { response =>
+      /* Body of respone is of the form: // [{"id": "22144", "t" : "AAPL" ,"e" : "NASDAQ" ,"l" : "94.40" ...}]*/
+      Quote(this, GBP((parse(response.body.replaceAll("""[// \[|\]]""", "")) \ "l").extract[String].toDouble))
+    }
 }
