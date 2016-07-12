@@ -1,1 +1,212 @@
-Hello, world
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Scala Blog - Scala Example by davidainslie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Scala Blog - Scala Example</h1>
+      <h2 class="project-tagline">Simple example for anyone</h2>
+      <a href="https://github.com/davidainslie/scala-blog-example" class="btn">View on GitHub</a>
+      <a href="https://github.com/davidainslie/scala-blog-example/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/davidainslie/scala-blog-example/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p>Welcome to the second of a series of blog posts about Scala.</p>
+
+<p>As discussed in the first post <a href="https://davidainslie.github.io/scala-blog-introduction/">An Introduction</a>, <a href="http://www.scala-lang.org/">Scala</a> just might be your best programming investment.</p>
+
+<p>This blog will present a very simple Scala application. Scala is huge and picking a first example could easily cover too much and overwhelm any newbie. At the same time, it would be nice to have an example that may interest someone who is already using Scala.</p>
+
+<p>Here is my attempt...</p>
+
+<h1>
+<a id="scala-example" class="anchor" href="#scala-example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Scala Example</h1>
+
+<p>Scala has been created, from the very beginning, to be in tune with the modern world of programming - all centred around the idea of a scalable language i.e. the language that grows with you and your needs.</p>
+
+<p>One of the modern, and it would seem, one of the most important, types of programming, is <strong>Reactive Programming</strong>. This is extremely important because of the <strong>web</strong>. And Scala (and other languages) brings an extra level of sophistication to this methodology: <strong>Functional Reactive Programming</strong>.</p>
+
+<p>Reactive programming will often include:</p>
+
+<ul>
+<li>Interact with a database without blocking</li>
+<li>Send a SOAP request to some legacy system without blocking</li>
+<li>Make a RESTful call without blocking</li>
+<li>Interact with streams without blocking</li>
+</ul>
+
+<p>So let's finish off with a full, but simple example, to illustrate this idea. To keep things as simple as possible, I've taken short cuts and so the solution is far from perfect e.g. I don't care about errors (even though Scala exception handling strategies are far better than most mainstream languages); I treat any price as GBP; I won't really get different price quotes; I would have preferred to use a concept called Type Classes, but that would be too advanced for our whirlwind introduction to the world of Scala. Also for brevity, I've omitted "imports". However, the full project will be on github for you to play around with. At some point, I may even publish a nicer solution on github.</p>
+
+<p>I'm a stock broker (not really), and I'm going to make calls to RESTful web services from two different banks. Actually, I'm going to cheat and simply call Yahoo Finance to represent one bank, and Google Finance to represent the other. We get free delayed price quotes of stocks.</p>
+
+<p>Two examples - the first will ask for two quotes at the same time, and accept the first quote that comes back; the second will again ask for two quotes at the same time, but accept the best quote i.e. we will need both quotes instead of just the first one.</p>
+
+<p>We will make two Future calls using a RESTful client and compose those Futures.</p>
+
+<p>Eh! Say what?</p>
+
+<p>In Scala, we can call functionality asynchronously i.e. kick off some processing but not wait for said processing to begin... we just carry on, knowing that a result will appear either now, or in the future... but the clever part, is that we can write code as if we are just dealing with synchronous calls, and most developers feel much more comfortable with this. We achieve this, by composing the Futures, which kind of means the composed code will only run, when the result of a future is available... but again, the developer is pretty well unaware of this.</p>
+
+<p>Now, a RESTful call is essentially, a Future call i.e. it is a non-blocking, asynchronous call. You can make a RESTful call synchronously, but that is a bad idea, because you would be wasting resources - you would not be reactive (which goes against, how the web works).</p>
+
+<p>For our RESTful call, we shall use Play, a Scala web library. Wait! Use a web library, just to make a RESTful call. Well, Play is split up into modules (as all good projects are) and you only use what you need, in this case the web service module.</p>
+
+<h3>
+<a id="common-code-for-the-examples" class="anchor" href="#common-code-for-the-examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Common Code for the Examples</h3>
+
+<p>First we'll need some banking stuff:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">trait</span> <span class="pl-en">Bank</span> {
+  <span class="pl-k">def</span> <span class="pl-en">name</span><span class="pl-k">:</span> <span class="pl-k">String</span>
+
+  <span class="pl-k">def</span> <span class="pl-en">quote</span>(<span class="pl-v">symbol</span>: <span class="pl-k">String</span>)(<span class="pl-k">implicit</span> <span class="pl-v">ws</span>: <span class="pl-en">WSClient</span>)<span class="pl-k">:</span> <span class="pl-en">Future</span>[<span class="pl-en">Quote</span>]
+}</pre></div>
+
+<p>For all you budding Java developers, think of a <strong>trait</strong> as an interface. So a bank will have to define its <strong>name</strong> and perform its own price quoting.</p>
+
+<p>That <strong>quote</strong> method will probably make you think, "what a weird signature, and it would seem that the method takes two argument lists".</p>
+
+<p>Firstly, the method return of <strong>Future[Quote]</strong>. Essentially, this method is asynchronous; when it is called, it immediately returns, and the body of the method runs at some point to produce a (price) <strong>Quote</strong>. That Future is <strong>composable</strong>, as we will see. Again, let me reiterate, that this whole example is somewhat noddy and naive, but should get the point across about Reactive Programming, making calls over the internet etc. can be concise and easy to read, as it is done in Scala.</p>
+
+<p>Secondly, the <strong>implicit ws: WSClient</strong>. Well <strong>WSClient</strong> is provided by Play's web services module to easily invoke RESTful services - you just provide WSClient with a URL and then either <strong>get</strong>, <strong>post</strong> (some data), <strong>put</strong> (some data) and <strong>delete</strong>. As for <strong>implicit</strong>. Well that is really for another blog (again since this is an introduction). However, it means that you don't have to call <strong>quote</strong> with a <strong>WSClient</strong>, there just has to be one available somewhere, and this comes down to the clever Scala compiler (there are rules to learn about where to look for something required).</p>
+
+<p>A bank needs to be able to provide a <strong>Quote</strong> (the result of a future call):</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Quote</span>(<span class="pl-v">bank</span>: <span class="pl-en">Bank</span>, <span class="pl-v">price</span>: <span class="pl-en">Money</span>)</pre></div>
+
+<p>Case classes (<strong>case class</strong>) are usually used in Scala to represent "domain/business data". In this case, the quote has a price, where <strong>Money</strong> is e.g. £45.78 or $21.00, and this comes from some bank.</p>
+
+<p>A <strong>case class</strong> is thus named, because it is a class (something that can be instantiated) that, as it is, can be used in a <strong>pattern match</strong>. Again, to keep is simple, a pattern match can be thought of as a powerful switch statement (a bunch of if/else statements), where one path will be taken - each path is defined by a <strong>case</strong>. Please refer to the pattern match example previously given.</p>
+
+<p>Finally we need two banks to provide quotes:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">object</span> <span class="pl-en">CreditSuisse</span> <span class="pl-k">extends</span> <span class="pl-e">Bank</span> {
+  <span class="pl-k">val</span> <span class="pl-en">name</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Credit Suisse<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">def</span> <span class="pl-en">quote</span>(<span class="pl-v">symbol</span>: <span class="pl-k">String</span>)(<span class="pl-k">implicit</span> <span class="pl-v">ws</span>: <span class="pl-en">WSClient</span>) <span class="pl-k">=</span> 
+    ws.url(s<span class="pl-s"><span class="pl-pds">"</span>http://finance.yahoo.com/d/quotes.csv?s=$symbol&amp;f=snl1<span class="pl-pds">"</span></span>).get().map { response <span class="pl-k">=&gt;</span>
+      <span class="pl-c">/* Body of response is of form: "AAPL","Apple Inc.",94.40 */</span>
+      <span class="pl-en">Quote</span>(<span class="pl-v">this</span>, <span class="pl-en">GBP</span>(response.body.split(<span class="pl-s"><span class="pl-pds">"</span>,<span class="pl-pds">"</span></span>)(<span class="pl-c1">2</span>).toDouble))
+    }
+}</pre></div>
+
+<p>Given a WSClient, we make a <strong>get</strong> RESTful call to Credit Suisse. As you can see, I'm cheating and just calling <strong>Yahoo Finance</strong> and then parsing the text CSV response. Note that we are returning a <strong>Quote</strong> but not actually stipulating <strong>return</strong> - this goes hand in hand with Expression Oriented Programming, where the last line of some functionality is the result to return.</p>
+
+<p>And here is JP Morgan, where under the hood, we use <strong>Google Finance</strong> and parse the <strong>JSON</strong> response (though it is not pure JSON, as we have to remove some text first).</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">object</span> <span class="pl-en">JPMorgan</span> <span class="pl-k">extends</span> <span class="pl-e">Bank</span> {
+  <span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">formats</span> <span class="pl-k">=</span> <span class="pl-en">DefaultFormats</span>
+
+  <span class="pl-k">val</span> <span class="pl-en">name</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>JP Morgan<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">def</span> <span class="pl-en">quote</span>(<span class="pl-v">symbol</span>: <span class="pl-k">String</span>)(<span class="pl-k">implicit</span> <span class="pl-v">ws</span>: <span class="pl-en">WSClient</span>) <span class="pl-k">=</span> 
+    ws.url(s<span class="pl-s"><span class="pl-pds">"</span>http://finance.google.com/finance/info?client=ig&amp;q=NASDAQ:$symbol<span class="pl-pds">"</span></span>).get().map { response <span class="pl-k">=&gt;</span>
+      <span class="pl-c">/* Body of respone is of the form: // [{"id": "22144", "t" : "AAPL" ,"e" : "NASDAQ" ,"l" : "94.40" ...}]*/</span>
+      <span class="pl-en">Quote</span>(<span class="pl-v">this</span>, <span class="pl-en">GBP</span>((parse(response.body.replaceAll(<span class="pl-s"><span class="pl-pds">"""</span>[// \[|\]]<span class="pl-pds">"""</span></span>, <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)) \ <span class="pl-s"><span class="pl-pds">"</span>l<span class="pl-pds">"</span></span>).extract[<span class="pl-k">String</span>].toDouble))
+    }
+}</pre></div>
+
+<p>Note that these two banks are <strong>object</strong> instead of <strong>class</strong>. Think of an <strong>object</strong> as a singleton version of <strong>class</strong> and so, should not be abused, because of the singleton anti pattern.</p>
+
+<h3>
+<a id="example-1" class="anchor" href="#example-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example 1</h3>
+
+<p>Buy the <strong>first</strong> quote that we are given. We shall ask Credit Suisse and JPMorgan at the same time, and our application will not block anywhere. The quotes we get back from these banks, wrapped in a <strong>Future</strong> will be composed with <strong>or</strong>, where we want one quote or the other - in this case, the first <strong>Future</strong> that completes (we are in a hurry to buy):</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">object</span> <span class="pl-en">WebServiceExample1App</span> <span class="pl-k">extends</span> <span class="pl-e">App</span> <span class="pl-k">with</span> <span class="pl-e">System</span> {
+
+  <span class="pl-k">val</span> <span class="pl-en">creditSuisseQuote</span> <span class="pl-k">=</span> <span class="pl-en">CreditSuisse</span> quote <span class="pl-s"><span class="pl-pds">"</span>AAPL<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">val</span> <span class="pl-en">jpMorganQuote</span> <span class="pl-k">=</span> <span class="pl-en">JPMorgan</span> quote <span class="pl-s"><span class="pl-pds">"</span>AAPL<span class="pl-pds">"</span></span>
+
+  (creditSuisseQuote or jpMorganQuote) map { quote <span class="pl-k">=&gt;</span>
+    println(s<span class="pl-s"><span class="pl-pds">"</span>I'll accept the FIRST received price of ${quote.price} from ${quote.bank.name}<span class="pl-pds">"</span></span>)
+  } onComplete { result <span class="pl-k">=&gt;</span>
+    <span class="pl-k">if</span> (result.isFailure) println(<span class="pl-s"><span class="pl-pds">"</span>Ignoring the fact that we have no quote<span class="pl-pds">"</span></span>)
+    sys.exit()
+  }
+}</pre></div>
+
+<p>An example of the output we will get is:</p>
+
+<pre><code>I'll accept the FIRST received price of 94.40 GBP from JP Morgan
+</code></pre>
+
+<p>Note that the code uses <strong>map</strong>, which is very big in functional programming.</p>
+
+<p>This is actually a function and it takes a function. (Ye! Will definitely have to do a blog on this stuff). The name is actually very appropriate. Developers deal a lot with the data structure Map. A Map is a container of key/value pairs. Given a key, give me back a value. That is what <strong>map</strong> does. In our example, given a <strong>Quote</strong> give me back, whatever my code decides. Regarding Map, the key and value can be of the same type of data or not. Same with the <strong>map</strong> function. But what is interesting in our example, is that <strong>map</strong> is called on a <strong>Future</strong>! What happens here, is that the function input (like the key in a Map) will be the result of a Future, and the result (like the value in a Map) will be wrapped in a Future. That's one of the cornerstones of <strong>Future</strong> - it keeps its shape - we write code and pretend that Future is just not there; we only deal with what is inside the Future. And a Future constitutes time - but we take time out of the equation, because time is a problem and messes things up (especially a developer's brain).</p>
+
+<h3>
+<a id="example-2" class="anchor" href="#example-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example 2</h3>
+
+<p>Buy the <strong>best</strong> quote that we are given. We shall ask Credit Suisse and JPMorgan at the same time, and our application will not block anywhere. The quotes we get back from these banks, wrapped in a <strong>Future</strong> will be composed in a <strong>for comprehension</strong>, where we need both quotes to decide which one to choose:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">object</span> <span class="pl-en">WebServiceExample2App</span> <span class="pl-k">extends</span> <span class="pl-e">App</span> <span class="pl-k">with</span> <span class="pl-e">System</span> {
+
+  <span class="pl-k">val</span> <span class="pl-en">creditSuisseQuote</span> <span class="pl-k">=</span> <span class="pl-en">CreditSuisse</span> quote <span class="pl-s"><span class="pl-pds">"</span>AAPL<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">val</span> <span class="pl-en">jpMorganQuote</span> <span class="pl-k">=</span> <span class="pl-en">JPMorgan</span> quote <span class="pl-s"><span class="pl-pds">"</span>AAPL<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">val</span> <span class="pl-en">bestQuote</span> <span class="pl-k">=</span> <span class="pl-k">for</span> {
+    csQuote <span class="pl-k">&lt;</span><span class="pl-k">-</span> creditSuisseQuote
+    jpQuote <span class="pl-k">&lt;</span><span class="pl-k">-</span> jpMorganQuote
+  } <span class="pl-k">yield</span> bestBuy(csQuote, jpQuote)
+
+  bestQuote map { quote <span class="pl-k">=&gt;</span>
+    println(s<span class="pl-s"><span class="pl-pds">"</span>I'll accept the BEST received price of ${quote.price} from ${quote.bank.name}<span class="pl-pds">"</span></span>)
+  } onComplete { result <span class="pl-k">=&gt;</span>
+    <span class="pl-k">if</span> (result.isFailure) println(<span class="pl-s"><span class="pl-pds">"</span>Ignoring the fact that we have no quote<span class="pl-pds">"</span></span>)
+    sys.exit()
+  }
+}</pre></div>
+
+<p>where the function <strong>bestBuy</strong> is the following simple and naive way of deciding what quote would be the best (lowest price):</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">def</span> <span class="pl-en">bestBuy</span>(<span class="pl-v">atLeastOneQuote</span>: <span class="pl-en">Quote</span>, <span class="pl-v">quotes</span>: <span class="pl-en">Quote</span><span class="pl-k">*</span>) <span class="pl-k">=</span> 
+  quotes.foldLeft(atLeastOneQuote) { (best, quote) <span class="pl-k">=&gt;</span>
+    <span class="pl-k">if</span> (best.price <span class="pl-k">&lt;=</span> quote.price) best <span class="pl-k">else</span> quote
+  }</pre></div>
+
+<p>where <strong>foldLeft</strong> is a much used functional way of taking a sequence (list, array etc.) and ending up with one item according to a given function i.e. our anonymous function of:</p>
+
+<div class="highlight highlight-source-scala"><pre>(best, quote) <span class="pl-k">=&gt;</span> best <span class="pl-en">OR</span> quote
+i.e.
+(<span class="pl-en">Quote</span>, <span class="pl-en">Quote</span>) <span class="pl-k">=&gt;</span> <span class="pl-en">Quote</span></pre></div>
+
+<p>Note that <strong>foldLeft</strong> is related to <strong>foldRight</strong>, <strong>fold</strong>, <strong>reduce</strong>, <strong>reduceLeft</strong> and others, that all encapsulate the important functional concept of <a href="http://alvinalexander.com/scala/scala-recursion-examples-recursive-programming">recursion</a>.</p>
+
+<p>An example of the output we will get is:</p>
+
+<pre><code>I'll accept the BEST received price of 94.40 GBP from JP Morgan
+</code></pre>
+
+<p>First thing to note about the <strong>for comprehension</strong>, is that it appears to be some sort of <strong>for</strong> loop you see in the likes of Java or JavaScript. It can be used in that way, but notice the <strong>yield</strong>. A for comprehension comes from Haskell's <strong>list comprehension</strong>. Without going into too much detail, we are actually performing another <strong>map</strong>, and also something called <strong>flatMap</strong>, which is like <strong>map</strong>. (Flat mapping is definitely for another blog).</p>
+
+<p>Secondly, the code could be viewed as making standard synchronous, blocking calls e.g. let's pretend the for comprehension was:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">csQuote</span> <span class="pl-k">=</span> creditSuisseQuote
+<span class="pl-k">val</span> <span class="pl-en">jpQuote</span> <span class="pl-k">=</span> jpMorganQuote
+
+<span class="pl-k">val</span> <span class="pl-en">bestQuote</span> <span class="pl-k">=</span> bestBuy(csQuote, jpQuote)</pre></div>
+
+<p>What we have achieved with the <strong>for comprehension</strong> is to once again, not concern ourselves with time. We are reactive. Our two RESTful calls are performed non-blocking and in parallel, and only when both Futures complete does the <strong>yield</strong> expression provide a result - if one or both RESTful calls fail, then the <strong>yield</strong> will not be executed, and the completed Future given to <strong>bestQuote</strong> will contain the error.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/davidainslie/scala-blog-example">Scala Blog - Scala Example</a> is maintained by <a href="https://github.com/davidainslie">davidainslie</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
