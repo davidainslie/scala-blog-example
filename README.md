@@ -18,19 +18,19 @@ Multiple main classes detected, select one to run:
 ^JEnter number: 
 ```
 
-### Footnote
+## Footnote
 
 Scala runs on the JVM. You need Java installed, and then install Scala.
 
 The following notes are for Mac users. Regarding other platforms, please see the links provided.
 
-##### Installing Homebrew for Mac
+#### Installing Homebrew for Mac
 The following installations use [Homebrew](http://brew.sh/). Paste the the following at a command/terminal prompt:
 ```
 $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
-##### Installing Java on your computer
+#### Installing Java on your computer
 
 To install Java, either go to the [Java website](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or, if you are lucky to have a Mac with Homebrew installed, then the following (from a command console) will install the latest [Open JDK](http://openjdk.java.net/):
 ```
@@ -40,7 +40,7 @@ $ brew install brew-cask
 $ brew cask install java
 ```
 
-##### Installing Scala on your computer
+#### Installing Scala on your computer
 
 To install Scala, either go to the [Scala website](http://www.scala-lang.org/download/) or, if you are lucky to have a Mac with Homebrew installed, then the following (from a command console) will install the latest version of Scala:
 ```
