@@ -1,6 +1,6 @@
-Welcome to the second of a series of blog posts about Scala.
+Welcome to the second of a series of blog posts about [Scala](http://www.scala-lang.org/).
 
-As discussed in the first post [An Introduction](https://davidainslie.github.io/scala-blog-introduction/), [Scala](http://www.scala-lang.org/) just might be your best programming investment.
+As discussed in the first post [An Introduction](https://davidainslie.github.io/scala-blog-introduction/), Scala just might be your best programming investment.
 
 This blog will present a very simple Scala application. Scala is huge and picking a first example could easily cover too much and overwhelm any newbie. At the same time, it would be nice to have an example that may interest someone who is already using Scala.
 
